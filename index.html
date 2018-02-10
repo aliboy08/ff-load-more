@@ -1,0 +1,108 @@
+<html>
+<head>
+<title>FF Load More Demo</title>
+
+<style>
+div {
+	overflow: hidden;
+}
+
+div div,
+.item {
+	float: left;
+	width: 31%;
+	background: #eee;
+	vertical-align: top;
+	padding: 10px;
+	box-sizing: border-box;
+	margin: 1%;
+}
+
+.load-more-container {
+	background: none;
+	width: 100%;
+	overflow: hidden;
+	margin-top: 20px;
+	text-align: center;
+	display: inline-block;
+}
+</style>
+</head>
+<body>
+	
+	<h2>Defaults:</h2>
+	<div class="load-more">
+		<div>ITEM</div>
+		<div>ITEM</div>
+		<div>ITEM</div>
+		<div>ITEM</div>
+		<div>ITEM</div>
+		<div>ITEM</div>
+		<div>ITEM</div>
+		<div>ITEM</div>
+		<div>ITEM</div>
+		<div>ITEM</div>
+		<div>ITEM</div>
+		<div>ITEM</div>
+		<div>ITEM</div>
+		<div>ITEM</div>
+		<div>ITEM</div>
+	</div>
+	
+	<br/>
+	<hr/>
+	<br/>
+	
+	<h2>With Options:</h2>
+	<div class="load-more-2">
+		<div class="item">ITEM</div>
+		<div class="item">ITEM</div>
+		<div class="item">ITEM</div>
+		<div class="item">ITEM</div>
+		<div class="item">ITEM</div>
+		<div class="item">ITEM</div>
+		<div class="item">ITEM</div>
+		<div class="item">ITEM</div>
+		<div class="item">ITEM</div>
+		<div class="item">ITEM</div>
+		<div class="item">ITEM</div>
+		<div class="item">ITEM</div>
+		<div class="item">ITEM</div>
+		<div class="item">ITEM</div>
+		<div class="item">ITEM</div>
+		<div class="item">ITEM</div>
+		<div class="item">ITEM</div>
+		<div class="item">ITEM</div>
+	</div>
+	
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	<script src="ff-load-more.js"></script>
+	
+	<script>
+	(function($){
+		$(function(){
+			
+			// Defaults:
+			/*
+			load_on_init: 9,
+			load_more: 9,
+			target: '.item',
+			load_more_btn_text: 'Load more',
+			load_more_btn_class: 'btn',
+			load_more_btn_wrapper: '',
+			*/
+			$('.load-more').ff_load_more();
+			
+			// With Options
+			$('.load-more-2').ff_load_more({
+				target: '.item',
+				load_on_init: 6,
+				load_more: 6,
+				load_more_btn_wrapper: '<div class="load-more-container"></div>',
+			});
+		});
+	})(jQuery)
+	</script>
+	
+</body>
+</html>
