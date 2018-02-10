@@ -1,0 +1,32 @@
+/* FOR DEMO ONLY */
+div {
+	overflow: hidden;
+}
+
+div div,
+.item {
+	float: left;
+	width: 31%;
+	background: #eee;
+	vertical-align: top;
+	padding: 10px;
+	box-sizing: border-box;
+	margin: 1%;
+	text-align: center;
+}
+
+.load-more-container {
+	background: none;
+	width: 100%;
+	overflow: hidden;
+	margin-top: 20px;
+	text-align: center;
+	display: inline-block;
+}
+
+img {
+	display: block;
+	margin: 0 auto 10px;
+	max-width: 100%;
+	height: initial;
+}
