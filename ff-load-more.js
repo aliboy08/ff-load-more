@@ -1,9 +1,9 @@
-/*! FF Load More Plugin v.1 */
+/*! FF Load More Plugin v2.0 */
 (function($){
 	
 	$.fn.ff_load_more = function(options){
 		
-		var $this = this;
+		var $this = $(this);
 		
 		var settings = $.extend({
 			load_on_init: 9,
@@ -13,7 +13,14 @@
 			load_more_btn_class: 'btn',
 			load_more_btn_wrapper: '',
 			lazyload: true,
+			
+			append_delay: 0,
+			fade_speed: 400,
+			slide_down_speed: 400,
+			height_animation_speed: 250,
 		}, options );
+		
+		var $container = $this;
 		
 		if( $this.data('load-on-init') ) {
 			settings.load_on_init = parseInt($this.data('load-on-init'));
@@ -23,105 +30,124 @@
 			settings.load_more = parseInt($this.data('load-more'));
 		}
 		
-		var load_more_btn = '',
-			total_items,
-			current_index = settings.load_on_init,
-			target,
-			temp_loop_limit;
-		
+		var $load_more_btn = $('<a href="#" class="'+ settings.load_more_btn_class +'">'+ settings.load_more_btn_text +'</a>'),
+			 initial_btn_text = $load_more_btn.text(),
+			 current_index = 0,
+			 lazyload_index = 0,
+			 target,
+			 temp_loop_limit;
+			 
 		if( settings.target ) {
 			target = $this.find(settings.target);
 		} else {
 			target = $this.children();
 		}
 		
-		total_items = target.length;
+		var total_items = target.length;
 		
-		// hide items
-		target.each(function(index){
-			if( index >= settings.load_on_init) {
+		var temp_items = [];
+		
+		function init(){
+			// Hide initial items
+			target.each(function(index){
 				var this_item = $(this);
-				this_item.hide();
-				
-				if( settings.lazyload ) {
-					var images = this_item.find('img');
-					if( images.length ){
-						// Have images, prevent load
-						prevent_images_load(images);
+				if( index >= settings.load_on_init) {
+					this_item.hide().css({'opacity': 0});
+					if( settings.lazyload ) {
+						var images = this_item.find('img');
+						if( images.length ){
+							// Prevent images from loading, for lazyloading
+							prevent_images_load(images);
+						}
 					}
 				}
-				
-			}
-		});
-		
-		if( current_index < total_items ) {
-			
-			// add load more button
-			load_more_btn = $('<a href="#" class="'+ settings.load_more_btn_class +'">'+ settings.load_more_btn_text +'</a>');
-			$this.append(load_more_btn);
-			
-			// button wrapper
-			if( settings.load_more_btn_wrapper ) {
-				load_more_btn = load_more_btn.wrap(settings.load_more_btn_wrapper);
-			}
-			
-			// show more items
-			load_more_btn.click(function(e){
-				e.preventDefault();
-				
-				temp_loop_limit = current_index + settings.load_more;
-				
-				if( settings.lazyload ) {
-					
-					// Lazyload
-					loopLazyLoadItems();
-					
-				} else {
-					
-					// No lazyload
-					for ( var i = current_index; i < temp_loop_limit; i++ ) {
-						$(target[i]).fadeIn();
-						current_index++;
-					}
-						
-				}
-				
-				// no more items
-				if( current_index >= total_items ) {
-					// remove load more button
-					load_more_btn.remove();
-				}
-				
 			});
 			
+			// Show initial items
+			$load_more_btn.text('loading').addClass('loading');
+			showItems(settings.load_on_init);
 		}
 		
-		document.onreadystatechange = function(){
-			if( document.readyState === 'complete' ) {
-				// Document load complete
-				// Load prevented images
-				$(target).find('img[src=""]').each(function(){
-					var this_img = $(this);
-					var data_src = this_img.data('src');
-					this_img.attr('src', data_src);
-				})
+		init();
+		
+		if( current_index < total_items ) {
+			// add load more button 
+			$container.append($load_more_btn);
+			// button wrapper
+			if( settings.load_more_btn_wrapper ) {
+				$load_more_btn = $load_more_btn.wrap(settings.load_more_btn_wrapper);
+			}
+			// Load more click
+			$load_more_btn.click(function(e){
+				e.preventDefault();
+				if( $(this).hasClass('loading') ) return;
+				loadMore(settings.load_more);
+			});
+		}
+		
+		function loadMore(limit){
+			
+			$load_more_btn.text('loading').addClass('loading');
+			
+			temp_loop_limit = current_index + limit;
+			
+			if( settings.lazyload ) {
+				// Lazyload
+				loopLazyLoadItems();
+			} else {
+				// No lazyload
+				showItems(temp_loop_limit);
+			}
+			
+			if( current_index >= total_items ) {
+				// No more items
+				$load_more_btn.remove();
 			}
 		}
 		
-		var loopItemCounter = 0;
-		var loopLazyLoadItems = function(index) {
+		function showItems(limit){
 			
-			loopItemCounter = current_index;
+			var $item,
+				 isLastItem = false;
+				 
+			var j = current_index;
+			for(var i = current_index; i < limit; ++i) {
+				$item = $(target[i]);
+				$item
+					.slideDown(settings.slide_down_speed)
+					.delay(i*settings.append_delay)
+					.animate({'opacity': 1}, settings.fade_speed, function(){
+						j++;
+						// use j counter for the animate delay
+						if( j === limit ) {
+							isLastItem = true;
+						}
+						if(isLastItem) {
+							// Last item, finish set
+							current_index = j;
+							lazyload_index = j;
+							updateContainerHeight();
+							$load_more_btn.text(initial_btn_text).removeClass('loading');
+						}
+					});
+			}
+		}
+		
+		var loopLazyLoadItems = function() {
+			
 			var images_count = 0;
 			
-			var child_images = $(target[loopItemCounter]).find('img');
+			var child_images = $(target[lazyload_index]).find('img');
 			if(child_images.length){
+				
 				// have images
 				images_count = child_images.length;
 				child_images.each(function(){
+					
 					var img_el = $(this);
 					var img_el_src = img_el.data('src');
 					var img = new Image();
+					// load image
 					img.src = img_el_src;
 					img.onload = function() {
 						// single image load complete
@@ -135,23 +161,64 @@
 					if( images_count == 0 ) {
 						// All images loaded on current item
 						clearInterval(timer); // stop watch
-						checkRecursiveFunction(loopItemCounter, temp_loop_limit - 1, loopLazyLoadItems);
+						checkRecursiveFunction(lazyload_index, temp_loop_limit, loopLazyLoadItems);
 					} 
 				}, 100 );
 				
 			} else {
 				// no images
-				checkRecursiveFunction(loopItemCounter, temp_loop_limit - 1, loopLazyLoadItems);
+				checkRecursiveFunction(lazyload_index, temp_loop_limit, loopLazyLoadItems);
 			}
+			
 		}
 		
 		function checkRecursiveFunction(index, limit, callback){
-			$(target[index]).fadeIn();
-			current_index++;
+			lazyload_index++;
+			if (index == limit) {
+				// Finish preloading images for set of items
+				showItems(index);
+				return;
+			}
 			if(index < limit) {
+				// loop through same function
 				callback();
 			} else {
 				return;
+			}
+		}
+		
+		// Adjust container when showing new items
+		function updateContainerHeight(){
+			var origH = $container.height();
+			$container.height('auto');
+			var newH = $container.height();
+			if( newH < origH ) {
+				$container.height(origH);
+				if( settings.slide_down_speed === 0 ) {
+					$container.height('auto');
+				} else {
+					$container.animate({'height': newH}, settings.height_animation_speed, function(){
+						$container.height('auto');
+					});
+				}
+			}
+		}
+		
+		document.onreadystatechange = function(){
+			if( document.readyState === 'complete' ) {
+				// Document load complete
+				// Load prevented images
+				$(target).find('img[src=""]').each(function(){
+					var this_img = $(this);
+					var data_src = this_img.data('src');
+					var img = new Image();
+					// load image
+					img.src = data_src;
+					img.onload = function() {
+						// load complete
+						this_img.attr('src', data_src);
+					}
+				})
 			}
 		}
 		

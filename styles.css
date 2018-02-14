@@ -1,9 +1,12 @@
 /* FOR DEMO ONLY */
+* {
+	box-sizing: border-box;
+}
+
 div {
 	overflow: hidden;
 }
 
-div div,
 .item {
 	float: left;
 	width: 31%;
@@ -29,4 +32,16 @@ img {
 	margin: 0 auto 10px;
 	max-width: 100%;
 	height: initial;
+}
+
+.wrapper {
+	width: 1200px;
+	max-width: 100%;
+	padding: 16px 15px;
+	margin: 0 auto;
+	background: #f9f9f9;
+}
+
+.load-more .item {
+	display: none;
 }
